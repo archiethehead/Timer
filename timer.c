@@ -6,6 +6,7 @@
 #define SECONDS 1000
 #define MINUTES 60000
 #define HOURS 3600000
+#define BOOL char
 #define STRCMP(x, y) !(strcmp(x, y))
 
 HANDLE consoleHandle;
@@ -22,8 +23,17 @@ void handleSIGINT(int signalNum) {
 
 void timer(int modifier, int milliseconds) {
     
+    BOOL paused = FALSE;    
+
     while (milliseconds > 0) {
         
+        if (!paused) {
+
+            Sleep(25);
+            milliseconds -= 25;
+
+        }
+
         if ((modifier == SECONDS) | (milliseconds < MINUTES)) { 
             
             double secondsLeft = milliseconds / SECONDS;        
@@ -60,19 +70,8 @@ void timer(int modifier, int milliseconds) {
             char inputChar = _getch();
 
             if (inputChar == 32) {
-                
-                char unpausedChar = 0;
-                do {
-                    
-                    Sleep(25);
-                
-                    if (_kbhit()) {
-
-                        unpausedChar = _getch();
-    
-                    }
-                
-                } while (unpausedChar != 32);
+               
+                paused ^= 1;    
                 
             }
 
@@ -89,10 +88,6 @@ void timer(int modifier, int milliseconds) {
             }
 
         }        
-
-        Sleep(25);
-
-        milliseconds -= 25;
 
     }
 
