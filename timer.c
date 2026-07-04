@@ -9,6 +9,14 @@
 #define BOOL char
 #define STRCMP(x, y) !(strcmp(x, y))
 
+
+int timePassed = 0;
+int secondsLeft = 0;
+int minutesLeft = 0;
+int hoursLeft = 0;
+int modifier = 0;
+int milliseconds = 0;
+   
 HANDLE consoleHandle;
 CONSOLE_CURSOR_INFO info;
 
@@ -21,50 +29,59 @@ void handleSIGINT(int signalNum) {
 
 }
 
-void timer(int modifier, int milliseconds) {
+void printTime(){
+    
+    if ((modifier == SECONDS) | (milliseconds < MINUTES)) { 
+                
+        printf("\r   %d seconds remaining . . .", (int)secondsLeft);
+        printf("                                       ");            
+        
+    }
+
+    else if ((modifier == MINUTES) | (milliseconds < HOURS)){
+       
+        printf("\r    %d minutes and ", minutesLeft);
+        printf("%d seconds remaining . . .", secondsLeft % 60);
+        printf("                                       ");            
+
+    }
+        
+    else {
+        
+        printf("\r    %d hours, ", hoursLeft);
+        printf("%d minutes, and ", minutesLeft % 60);
+        printf("%d seconds remaining . . .", secondsLeft % 60);           
+        printf("                                       ");            
+                    
+
+    }
+
+}
+
+void calculateTime() {
+
+    hoursLeft = milliseconds / HOURS;
+    minutesLeft = milliseconds / MINUTES;
+    secondsLeft = milliseconds / SECONDS;
+
+}
+
+void timer() {
     
     BOOL paused = FALSE;    
 
-    while (milliseconds > 0) {
-        
+    while (milliseconds > 0) { 
+
         if (!paused) {
 
             Sleep(25);
             milliseconds -= 25;
+            timePassed += 25; 
+            calculateTime();                        
+            printTime();
 
         }
-
-        if ((modifier == SECONDS) | (milliseconds < MINUTES)) { 
-            
-            double secondsLeft = milliseconds / SECONDS;        
-            printf("\r   %d seconds remaining . . .", (int)secondsLeft);
-            printf("                                       ");            
-            
-        }
-
-        else if ((modifier == MINUTES) | (milliseconds < HOURS)){
-           
-            int minutesLeft = milliseconds / MINUTES;
-            int secondsLeft = (milliseconds / SECONDS) % 60;
-            printf("\r    %d minutes and ", minutesLeft);
-            printf("%d seconds remaining . . .", secondsLeft);
-            printf("                                       ");            
-
-        }
-            
-        else {
-            
-            int hoursLeft = milliseconds / HOURS;
-            int minutesLeft = (milliseconds / MINUTES) % 60;
-            int secondsLeft = (milliseconds / SECONDS) % 60;
-            printf("\r    %d hours, ", hoursLeft);
-            printf("%d minutes, and ", minutesLeft);
-            printf("%d seconds remaining . . .", secondsLeft);           
-            printf("                                       ");            
-                        
-    
-        }
-        
+ 
         if (_kbhit()) {
 
             char inputChar = _getch();
@@ -78,12 +95,16 @@ void timer(int modifier, int milliseconds) {
             else if (inputChar == 43) {
 
                 milliseconds += MINUTES;
+                calculateTime();
+                printTime();
 
             }
 
             else if (inputChar == 45) {
 
                 milliseconds -= MINUTES;
+                calculateTime();
+                printTime();                
 
             }
 
@@ -141,8 +162,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    float time = atof(argv[2]);
-    int modifier;    
+    float time = atof(argv[2]);  
 
     if (time == 0) {
     
@@ -185,9 +205,9 @@ int main(int argc, char *argv[]) {
 
     puts("");
 
-    int milliseconds = time * modifier;
+    milliseconds = time * modifier;
 
-    timer(modifier, milliseconds); 
+    timer(); 
     
     if (!argc) {
 
