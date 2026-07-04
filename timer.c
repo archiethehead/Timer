@@ -10,12 +10,15 @@
 #define STRCMP(x, y) !(strcmp(x, y))
 
 
-int timePassed = 0;
-int secondsLeft = 0;
-int minutesLeft = 0;
-int hoursLeft = 0;
-int modifier = 0;
-int milliseconds = 0;
+typedef struct timeUnits{
+
+    int secondsLeft;
+    int minutesLeft;
+    int hoursLeft;
+    int milliseconds;
+    int modifier;    
+
+} timeInfo;
    
 HANDLE consoleHandle;
 CONSOLE_CURSOR_INFO info;
@@ -29,28 +32,28 @@ void handleSIGINT(int signalNum) {
 
 }
 
-void printTime(){
+void printTime(timeInfo* timeinfo){
     
-    if ((modifier == SECONDS) | (milliseconds < MINUTES)) { 
+    if (!(timeinfo->hoursLeft) && !(timeinfo->minutesLeft)) { 
                 
-        printf("\r   %d seconds remaining . . .", (int)secondsLeft);
+        printf("\r   %d seconds remaining . . .", timeinfo->secondsLeft);
         printf("                                       ");            
         
     }
 
-    else if ((modifier == MINUTES) | (milliseconds < HOURS)){
+    else if (!(timeinfo->hoursLeft)) {
        
-        printf("\r    %d minutes and ", minutesLeft);
-        printf("%d seconds remaining . . .", secondsLeft % 60);
+        printf("\r    %d minutes and ", timeinfo->minutesLeft);
+        printf("%d seconds remaining . . .", timeinfo->secondsLeft % 60);
         printf("                                       ");            
 
     }
         
     else {
         
-        printf("\r    %d hours, ", hoursLeft);
-        printf("%d minutes, and ", minutesLeft % 60);
-        printf("%d seconds remaining . . .", secondsLeft % 60);           
+        printf("\r    %d hours, ", timeinfo->hoursLeft);
+        printf("%d minutes, and ", timeinfo->minutesLeft % 60);
+        printf("%d seconds remaining . . .", timeinfo->secondsLeft % 60);           
         printf("                                       ");            
                     
 
@@ -58,27 +61,28 @@ void printTime(){
 
 }
 
-void calculateTime() {
+void calculateTime(timeInfo* timeinfo) {
 
-    hoursLeft = milliseconds / HOURS;
-    minutesLeft = milliseconds / MINUTES;
-    secondsLeft = milliseconds / SECONDS;
+    int milliseconds = timeinfo->milliseconds;    
+
+    timeinfo->hoursLeft = milliseconds / HOURS;
+    timeinfo->minutesLeft = milliseconds / MINUTES;
+    timeinfo->secondsLeft = milliseconds / SECONDS;
 
 }
 
-void timer() {
+void timer(timeInfo* timeinfo) {
     
-    BOOL paused = FALSE;    
-
-    while (milliseconds > 0) { 
+    BOOL paused = FALSE;
+    
+    while (timeinfo->milliseconds > 0) { 
 
         if (!paused) {
 
             Sleep(25);
-            milliseconds -= 25;
-            timePassed += 25; 
-            calculateTime();                        
-            printTime();
+            timeinfo->milliseconds -= 25;
+            calculateTime(timeinfo);                        
+            printTime(timeinfo);
 
         }
  
@@ -94,17 +98,17 @@ void timer() {
 
             else if (inputChar == 43) {
 
-                milliseconds += MINUTES;
-                calculateTime();
-                printTime();
+                timeinfo->milliseconds += MINUTES;
+                calculateTime(timeinfo);
+                printTime(timeinfo);
 
             }
 
             else if (inputChar == 45) {
 
-                milliseconds -= MINUTES;
-                calculateTime();
-                printTime();                
+                timeinfo->milliseconds -= MINUTES;
+                calculateTime(timeinfo);
+                printTime(timeinfo);                
 
             }
 
@@ -142,8 +146,6 @@ int main(int argc, char *argv[]) {
         puts("");
         while (TRUE) {          
            
-            timer(MINUTES, 25 * MINUTES);
-            timer(MINUTES, 5 * MINUTES);
           
         } 
 
@@ -163,6 +165,7 @@ int main(int argc, char *argv[]) {
     }
 
     float time = atof(argv[2]);  
+    int modifier;    
 
     if (time == 0) {
     
@@ -205,9 +208,11 @@ int main(int argc, char *argv[]) {
 
     puts("");
 
-    milliseconds = time * modifier;
-
-    timer(); 
+    int milliseconds = time * modifier;
+    timeInfo timeinfo;
+    timeinfo.milliseconds = milliseconds;
+    timeinfo.modifier = modifier;
+    timer(&timeinfo);
     
     if (!argc) {
 
